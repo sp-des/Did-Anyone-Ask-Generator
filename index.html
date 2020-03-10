@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>DAAGenerator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+<script src="jquery.min.js"></script>
+</head>
+<body>
+
+<script>
+var letters = ["A","B","C","D","E","F","G","H","I","J","K","L"];
+var notes = letters;
+var transport = 1;
+var animSpeed = 300;
+var tones = 1;
+window.onload = function() {
+	var tones = 1;
+	
+	// Populate select
+	$.each(notes, function(index, note) {
+		$("#noteSelect").append( $('<option class="note"></option>').val(index).html(note) )
+	})
+
+	$(".btn").mouseup(function(){
+	    $(this).blur();
+	});
+
+	$("#notation > .btn").click(function() {
+        if ($(this).hasClass("active")) {return;}
+	    $(this).addClass("active").siblings().removeClass("active");
+	    notes = notes==solfege ? letters : solfege;
+	    $(".note").each(function() {
+			var oldNote = $(this).text();
+			oldNote = handleBemol(oldNote)
+			$(this).html(notes[(notes==solfege ? letters : solfege).indexOf(oldNote)]);
+	    });
+	});
+
+	$("#addTone").click(function() {addTone();});
+
+	$("#lower").click(function() {transport--; refresh();});
+	$("#upper").click(function() {transport++; refresh();});
+
+	addTone();
+};
+
+addTone = function() {
+	var tone = $("#tone").clone().attr("id","tone" + tones);
+	$("#tones").append(tone);
+	tone.show(animSpeed);
+	tone.children("#selection").children("select").change(function() {
+	    $(this).parent().siblings("div.result").children("#res").html(transpose($(this).children("option:selected").text(), transport));
+	});
+	tone.children(".col-xs-2").children(".removeTone").click(function() {
+	    $(this).parent().parent().hide(animSpeed, function() {$(this).remove()});
+	});
+	tone.children(".result").children("#res").html(transpose(tone.children("#selection").children("select").children("option:selected").text(), transport))
+	tones ++;
+};
+
+transpose = function(startingTone, offset) {
+	startingTone = handleBemol(startingTone);
+	var oldIndex = notes.indexOf(startingTone);
+	var newIndex = oldIndex + offset < 0 ? oldIndex + offset + notes.length : oldIndex + offset;
+	console.debug("Starting tone: " + startingTone + "\toffset: " + offset + "\tresult: " + notes[newIndex%notes.length]);
+	return notes[newIndex%notes.length];
+};
+
+refresh = function() {
+	$("#deltaTone").html(transport < 0 ? transport : "+" + transport);
+	$("#tones").children().children(".result").children(".note").each(function() {
+	    $(this).html(transpose($(this).parent().siblings("#selection").children("select").children("option:selected").text(), transport));
+	});
+};
+
+// convert bemol:
+handleBemol = function(note) {
+	return note.length > 4 ? note.replace(note.charAt(note.length-1), "&#9837;") : note;
+};
+
+</script>
+<div class="container">
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+	<div class="row">
+	    <div class="col-xs-5" >
+			<button id="lower" type="button" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span></button>
+			<span id="deltaTone">+1</span>
+			<button id="upper" type="button" class="btn btn-default"><span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span></button>
+	    </div>
+	    
+	</div>
+    <hr>
+	<div id="tones" class="container-fluid" >
+	    <div id="tone" style="display:none" class="row list-group-item" >
+			<div class="col-xs-5" id="selection" >
+				<select id="noteSelect" class="form-control" >
+
+				</select>
+			</div>
+
+			<div class="col-xs-2">
+				<button class="btn btn-default removeTone" >
+				<span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span>
+				</button>
+	    	</div>
+	    </div>
+	</div>
+	<br>
+	<button id="addTone" type=button class="btn btn-default">
+	<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span> Add note
+	</button>
+</div>
+<div align="center">
+</div>
+</body>
+</html>
